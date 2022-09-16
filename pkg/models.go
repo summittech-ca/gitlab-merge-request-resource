@@ -28,6 +28,7 @@ type Source struct {
 	IgnorePaths        []string `json:"ignore_paths,omitempty"`
 	UserEmail          string   `json:"user_email,omitempty"`
 	UserName           string   `json:"user_name,omitempty"`
+	SshKeys            []string `json:"ssh_keys,omitempty"`
 }
 
 type Version struct {
