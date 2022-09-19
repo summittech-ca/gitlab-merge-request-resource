@@ -2,12 +2,13 @@ package in
 
 import (
 	"encoding/json"
-	"github.com/samcontesse/gitlab-merge-request-resource/pkg"
-	"github.com/xanzy/go-gitlab"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/samcontesse/gitlab-merge-request-resource/pkg"
+	"github.com/xanzy/go-gitlab"
 )
 
 type Command struct {
@@ -53,6 +54,16 @@ func (command *Command) Run(destination string, request Request) (Response, erro
 	if err != nil {
 		return Response{}, err
 	}
+
+	if request.Source.UserEmail == "" {
+		request.Source.UserEmail = "git@example.com"
+	}
+	command.runner.Run("config", "--global", "user.email", request.Source.UserEmail)
+
+	if request.Source.UserName == "" {
+		request.Source.UserName = "git"
+	}
+	command.runner.Run("config", "--global", "user.name", request.Source.UserName)
 
 	err = command.runner.Run("clone", "-c", "http.sslVerify="+strconv.FormatBool(!request.Source.Insecure), "-o", "target", "-b", mr.TargetBranch, target.String(), destination)
 	if err != nil {
