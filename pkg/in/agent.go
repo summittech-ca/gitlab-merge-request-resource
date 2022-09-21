@@ -2,7 +2,6 @@ package in
 
 import (
 	"bytes"
-	"io"
 	"os"
 	"os/exec"
 )
@@ -41,18 +40,13 @@ func (r *AgentRunnerImpl) Start() error {
 
 func (r AgentRunnerImpl) AddKey(key string) error {
 	command := exec.Command("ssh-add", "-")
-	stdin, err := command.StdinPipe()
-	if err != nil {
-		io.WriteString(stdin, key)
-	}
 	command.Stderr = os.Stderr
 	var b bytes.Buffer
 	b.Write([]byte(key))
 	command.Stdin = &b
-	err = command.Run()
+	err := command.Run()
 	if err != nil {
 		return err
 	}
-	stdin.Close()
 	return nil
 }
