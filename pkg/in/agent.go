@@ -1,10 +1,9 @@
 package in
 
 import (
-	"bytes"
-	"io"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type AgentRunner interface {
@@ -41,18 +40,11 @@ func (r *AgentRunnerImpl) Start() error {
 
 func (r AgentRunnerImpl) AddKey(key string) error {
 	command := exec.Command("ssh-add", "-")
-	stdin, err := command.StdinPipe()
-	if err != nil {
-		io.WriteString(stdin, key)
-	}
 	command.Stderr = os.Stderr
-	var b bytes.Buffer
-	b.Write([]byte(key))
-	command.Stdin = &b
-	err = command.Run()
+	command.Stdin = strings.NewReader(key + "\n") // this trailing newline is mandatory or ssh-add will fail
+	err := command.Run()
 	if err != nil {
 		return err
 	}
-	stdin.Close()
 	return nil
 }
