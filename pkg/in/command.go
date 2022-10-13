@@ -2,8 +2,8 @@ package in
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"strconv"
@@ -58,7 +58,8 @@ func (command *Command) Run(destination string, request Request) (Response, erro
 		return Response{}, err
 	}
 
-	fmt.Println("Cloning...")
+	l := log.New(os.Stderr, "", 0)
+	l.Println("Cloning...")
 	err = command.runner.Run("clone", "-v", "-c", "http.sslVerify="+strconv.FormatBool(!request.Source.Insecure), "-o", "target", "-b", mr.TargetBranch, target.String(), destination)
 	if err != nil {
 		return Response{}, err
