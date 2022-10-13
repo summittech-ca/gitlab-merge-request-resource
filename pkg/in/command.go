@@ -85,7 +85,7 @@ func (command *Command) Run(destination string, request Request) (Response, erro
 	if err != nil {
 		return Response{}, err
 	}
-	err = command.runner.Run("remote", "update", "-v")
+	err = command.runner.Run("remote", "update")
 	if err != nil {
 		return Response{}, err
 	}
@@ -95,7 +95,7 @@ func (command *Command) Run(destination string, request Request) (Response, erro
 	}
 
 	if request.Source.Recursive {
-		err = command.runner.Run("submodule", "update", "-v", "--init", "--recursive")
+		err = command.runner.Run("submodule", "update", "--init", "--recursive")
 		if err != nil {
 			return Response{}, err
 		}
