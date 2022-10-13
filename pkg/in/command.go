@@ -3,6 +3,7 @@ package in
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"strconv"
@@ -67,14 +68,9 @@ func (command *Command) Run(destination string, request Request) (Response, erro
 	}
 	command.runner.Run("config", "--global", "user.name", request.Source.UserName)
 
-	err = command.runner.Run("clone", "-c", "http.sslVerify="+strconv.FormatBool(!request.Source.Insecure), "-o", "target", "-b", mr.TargetBranch, target.String(), destination)
-	if err != nil {
-		return Response{}, err
-	}
-
-	os.Chdir(destination)
-
 	if (request.Source.SshKeys != nil) && (len(request.Source.SshKeys) != 0) {
+		l := log.New(os.Stderr, "", 0)
+		l.Println("Adding ssh key...")
 		err = command.runner.Run("config", "--global", "core.sshCommand", "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no")
 		if err != nil {
 			return Response{}, err
@@ -89,7 +85,17 @@ func (command *Command) Run(destination string, request Request) (Response, erro
 				return Response{}, err
 			}
 		}
+	} else {
+		l := log.New(os.Stderr, "", 0)
+		l.Println("Not adding ssh key...")
 	}
+
+	err = command.runner.Run("clone", "-c", "http.sslVerify="+strconv.FormatBool(!request.Source.Insecure), "-o", "target", "-b", mr.TargetBranch, target.String(), destination)
+	if err != nil {
+		return Response{}, err
+	}
+
+	os.Chdir(destination)
 
 	command.runner.Run("remote", "add", "source", source.String())
 	command.runner.Run("remote", "update")
