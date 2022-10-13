@@ -2,12 +2,13 @@ package in
 
 import (
 	"encoding/json"
-	"github.com/samcontesse/gitlab-merge-request-resource/pkg"
-	"github.com/xanzy/go-gitlab"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/samcontesse/gitlab-merge-request-resource/pkg"
+	"github.com/xanzy/go-gitlab"
 )
 
 type Command struct {
@@ -61,15 +62,21 @@ func (command *Command) Run(destination string, request Request) (Response, erro
 
 	os.Chdir(destination)
 
-	command.runner.Run("remote", "add", "source", source.String())
-	command.runner.Run("remote", "update")
-	command.runner.Run("merge", "--no-ff", "--no-commit", mr.SHA)
+	err = command.runner.Run("remote", "add", "source", source.String())
+	if err != nil {
+		return Response{}, err
+	}
+	err = command.runner.Run("remote", "update", "-v")
+	if err != nil {
+		return Response{}, err
+	}
+	err = command.runner.Run("merge", "-v", "--no-ff", "--no-commit", mr.SHA)
 	if err != nil {
 		return Response{}, err
 	}
 
 	if request.Source.Recursive {
-		err = command.runner.Run("submodule", "update", "--init", "--recursive")
+		err = command.runner.Run("submodule", "update", "-v", "--init", "--recursive")
 		if err != nil {
 			return Response{}, err
 		}
