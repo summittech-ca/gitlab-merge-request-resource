@@ -1,7 +1,7 @@
 package in
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -20,9 +20,10 @@ type DefaultRunner struct {
 func (r DefaultRunner) Run(args ...string) error {
 	cmd := "git"
 	command := exec.Command(cmd, args...)
-	fmt.Print(cmd)
-	fmt.Print(" ")
-	fmt.Println(args)
+	l := log.New(os.Stderr, "", 0)
+	l.Print(cmd)
+	l.Print(" ")
+	l.Println(args)
 
 	command.Stdin = os.Stdin
 	command.Stderr = os.Stderr
