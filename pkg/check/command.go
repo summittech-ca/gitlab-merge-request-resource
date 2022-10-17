@@ -1,10 +1,13 @@
 package check
 
 import (
-	"github.com/samcontesse/gitlab-merge-request-resource/pkg"
-	"github.com/xanzy/go-gitlab"
+	"fmt"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/samcontesse/gitlab-merge-request-resource/pkg"
+	"github.com/xanzy/go-gitlab"
 )
 
 type Command struct {
@@ -44,17 +47,20 @@ func (command *Command) Run(request Request) (Response, error) {
 
 	for _, mr := range requests {
 		if mr.SHA == "" {
+			fmt.Fprintf(os.Stderr, "MR sha is empty")
 			continue
 		}
 
 		commit, _, err := command.client.Commits.GetCommit(mr.ProjectID, mr.SHA)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to GetCommit")
 			return Response{}, err
 		}
 
 		updatedAt := commit.CommittedDate
 
 		if strings.Contains(commit.Title, "[skip ci]") || strings.Contains(commit.Message, "[skip ci]") {
+			fmt.Fprintf(os.Stderr, "MR has [skip ci] in title, skipping")
 			continue
 		}
 
@@ -64,23 +70,28 @@ func (command *Command) Run(request Request) (Response, error) {
 		}
 
 		if request.Source.SkipNotMergeable && mr.MergeStatus != "can_be_merged" {
+			fmt.Fprintf(os.Stderr, "MR MergeStatus != can_be_merged, skipping")
 			continue
 		}
 
 		if request.Source.SkipWorkInProgress && mr.WorkInProgress {
+			fmt.Fprintf(os.Stderr, "MR is WIP, skipping")
 			continue
 		}
 
 		if request.Version.UpdatedAt != nil && !updatedAt.After(*request.Version.UpdatedAt) {
+			fmt.Fprintf(os.Stderr, "MR UpdatedAt %s !after request.Version.UpdatedAt %s, skipping", updatedAt.String(), request.Version.UpdatedAt.String())
 			continue
 		}
 
 		match, err := matchPathPatterns(command.client, mr, request.Source)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "MR matchPathPatterns failed, skipping")
 			return nil, err
 		}
 
 		if !match {
+			fmt.Fprintf(os.Stderr, "MR matchPathPatterns no match, skipping")
 			continue
 		}
 
